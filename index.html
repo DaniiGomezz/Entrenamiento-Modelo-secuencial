@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TF.js con Gráficos de Pérdida</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.12.0"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-vis@1.5.0"></script>
+    <link rel="stylesheet" href="index.css">
+</head>
+
+<body>
+    <h1>Entrenamiento de Modelo TensorFlow.js</h1>
+    <p>Fórmula: y = 2x + 6</p>
+
+    <button onclick="trainModel()">Entrenar Modelo</button>
+    <input type="number" id="input-x">
+    <button onclick="predictValue()">Predecir</button>
+    <div id="output-field"></div>
+    <div id="loss-graph"></div>
+
+    <script>
+        let model; // Hacer el modelo global para poder usarlo después del entrenamiento
+        const lossValues = []; // Almacenar valores de pérdida para graficar
+
+        async function trainModel() {
+            model = tf.sequential();
+            model.add(tf.layers.dense({ units: 1, inputShape: [1] }));
+
+            model.compile({
+                loss: 'meanSquaredError',
+                optimizer: 'sgd'
+            });
+
+            const xs = tf.tensor2d([-6, -5, -4, -3, -2, -1, 0, 1, 2], [9, 1]);
+            const ys = tf.tensor2d([-6, -4, -2, 0, 2, 4, 6, 8, 10], [9, 1]);
+
+       
+
+            await model.fit(xs, ys, { epochs: 1000, callbacks: fitCallback });
+
+            document.getElementById('output-field').innerHTML = "<p> El modelo ha sido entrenado y está listo para ser utilizado 👌</p>";
+        }
+
+        async function predictValue() {
+            const inputValue = parseFloat(document.getElementById('input-x').value);
+
+            if (isNaN(inputValue)) {
+                alert('Por favor, ingrese un número para predecir.');
+                return;
+            }
+
+            if (!model) {
+                await trainModel(); // Entrenar el modelo si no está entrenado
+            }
+
+            const prediction = model.predict(tf.tensor2d([inputValue], [1, 1]));
+            const value = await prediction.data();
+
+            document.getElementById('output-field').innerHTML = `<p> El valor de Y predicho para X= ${inputValue} es ${value[0].toFixed(2)}</p>`;
+        }
+    </script>
+</body>
+
+</html>
